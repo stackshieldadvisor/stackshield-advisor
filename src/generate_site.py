@@ -8,7 +8,7 @@ from datetime import date
 from pathlib import Path
 
 SITE_NAME = "StackShield Advisor"
-DEFAULT_BASE_URL = "https://stackshield-advisor.pages.dev"
+DEFAULT_BASE_URL = "https://stackshieldadvisor.github.io"
 LANGUAGES = {
     "en": "English",
     "fr": "Français",
