@@ -71,6 +71,25 @@ class StaticSiteGenerationTests(unittest.TestCase):
         for slug in ["affiliate-disclosure", "privacy-policy", "methodology"]:
             self.assertTrue((self.tmpdir / "en" / slug / "index.html").exists())
 
+    def test_build_supports_github_project_pages_path_prefix(self):
+        from src.generate_site import build_site
+
+        build_site(
+            self.tmpdir,
+            base_url="https://stackshieldadvisor.github.io/stackshield-advisor",
+            path_prefix="/stackshield-advisor",
+        )
+
+        homepage = (self.tmpdir / "en" / "index.html").read_text(encoding="utf-8")
+        sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
+        robots = (self.tmpdir / "robots.txt").read_text(encoding="utf-8")
+
+        self.assertIn('href="/stackshield-advisor/assets/styles.css"', homepage)
+        self.assertIn('href="/stackshield-advisor/en/best-backup-software-small-business/"', homepage)
+        self.assertIn('href="https://stackshieldadvisor.github.io/stackshield-advisor/en/"', homepage)
+        self.assertIn("https://stackshieldadvisor.github.io/stackshield-advisor/en/best-backup-software-small-business/", sitemap)
+        self.assertIn("Sitemap: https://stackshieldadvisor.github.io/stackshield-advisor/sitemap.xml", robots)
+
 
 if __name__ == "__main__":
     unittest.main()

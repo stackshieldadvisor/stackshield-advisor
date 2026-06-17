@@ -153,6 +153,38 @@ def escape(value: str) -> str:
     return html.escape(value, quote=True)
 
 
+def normalize_path_prefix(path_prefix: str | None) -> str:
+    if not path_prefix:
+        return ""
+    cleaned = path_prefix.strip()
+    if not cleaned or cleaned == "/":
+        return ""
+    return "/" + cleaned.strip("/")
+
+
+def prefixed(path_prefix: str, path: str) -> str:
+    normalized = normalize_path_prefix(path_prefix)
+    if not normalized:
+        return path
+    if not path.startswith("/"):
+        path = "/" + path
+    return normalized + path
+
+
+def apply_path_prefix(html_text: str, path_prefix: str) -> str:
+    normalized = normalize_path_prefix(path_prefix)
+    if not normalized:
+        return html_text
+    return (
+        html_text
+        .replace('href="/', f'href="{normalized}/')
+        .replace("href='/", f"href='{normalized}/")
+        .replace('src="/', f'src="{normalized}/')
+        .replace("src='/", f"src='{normalized}/")
+        .replace('url=/', f'url={normalized}/')
+    )
+
+
 def canonical(base_url: str, page: Page) -> str:
     return base_url.rstrip("/") + page.path
 
@@ -167,7 +199,7 @@ def alternate_links(base_url: str, pages_by_key: dict[str, dict[str, Page]], key
     return "\n    ".join(links)
 
 
-def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_url: str) -> str:
+def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_url: str, path_prefix: str = "") -> str:
     current_url = canonical(base_url, page)
     lang_nav = " · ".join(
         f'<a href="{pages_by_key[key][lang].path}">{label}</a>' for lang, label in LANGUAGES.items()
@@ -179,7 +211,7 @@ def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_
           <strong>Affiliate disclosure</strong><br>{escape(AFFILIATE_DISCLOSURE)}
         </aside>
         """
-    return f"""<!doctype html>
+    html_text = f"""<!doctype html>
 <html lang="{page.lang}">
 <head>
   <meta charset="utf-8">
@@ -215,6 +247,7 @@ def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_
   <script src="/assets/recommender.js" defer></script>
 </body>
 </html>"""
+    return apply_path_prefix(html_text, path_prefix)
 
 
 def home_body(lang: str) -> str:
@@ -381,10 +414,10 @@ def build_pages() -> tuple[list[Page], dict[str, dict[str, Page]]]:
     return pages, pages_by_key
 
 
-def write_page(output_dir: Path, page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_url: str) -> None:
+def write_page(output_dir: Path, page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_url: str, path_prefix: str = "") -> None:
     page_dir = output_dir / page.lang / page.slug if page.slug else output_dir / page.lang
     page_dir.mkdir(parents=True, exist_ok=True)
-    (page_dir / "index.html").write_text(layout(page, key, pages_by_key, base_url), encoding="utf-8")
+    (page_dir / "index.html").write_text(layout(page, key, pages_by_key, base_url, path_prefix), encoding="utf-8")
 
 
 def write_assets(output_dir: Path) -> None:
@@ -413,15 +446,17 @@ def write_robots(output_dir: Path, base_url: str) -> None:
     )
 
 
-def write_root_redirect(output_dir: Path) -> None:
+def write_root_redirect(output_dir: Path, path_prefix: str = "") -> None:
+    target = prefixed(path_prefix, "/en/")
     (output_dir / "index.html").write_text(
-        """<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=/en/"><meta name="viewport" content="width=device-width, initial-scale=1"><title>StackShield Advisor</title></head><body><p><a href="/en/">Continue to StackShield Advisor</a></p></body></html>""",
+        f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url={target}"><meta name="viewport" content="width=device-width, initial-scale=1"><title>StackShield Advisor</title></head><body><p><a href="{target}">Continue to StackShield Advisor</a></p></body></html>""",
         encoding="utf-8",
     )
 
 
-def build_site(output_dir: str | Path, base_url: str | None = None) -> Path:
+def build_site(output_dir: str | Path, base_url: str | None = None, path_prefix: str | None = None) -> Path:
     output_dir = Path(output_dir)
+    path_prefix = normalize_path_prefix(path_prefix or os.getenv("SITE_PATH_PREFIX", ""))
     base_url = base_url or os.getenv("SITE_BASE_URL", DEFAULT_BASE_URL)
     if output_dir.exists():
         shutil.rmtree(output_dir)
@@ -429,11 +464,11 @@ def build_site(output_dir: str | Path, base_url: str | None = None) -> Path:
     pages, pages_by_key = build_pages()
     for key, lang_pages in pages_by_key.items():
         for page in lang_pages.values():
-            write_page(output_dir, page, key, pages_by_key, base_url)
+            write_page(output_dir, page, key, pages_by_key, base_url, path_prefix)
     write_assets(output_dir)
     write_sitemap(output_dir, pages, base_url)
     write_robots(output_dir, base_url)
-    write_root_redirect(output_dir)
+    write_root_redirect(output_dir, path_prefix)
     return output_dir
 
 
