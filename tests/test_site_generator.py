@@ -62,6 +62,20 @@ class StaticSiteGenerationTests(unittest.TestCase):
         self.assertIn("/es/mejor-software-copias-seguridad-pymes/", sitemap)
         self.assertIn("/de/beste-backup-software-kleine-unternehmen/", sitemap)
 
+    def test_ransomware_recovery_checklist_page_is_generated_with_sources_and_cta(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        page = self.tmpdir / "en" / "ransomware-recovery-checklist-small-business" / "index.html"
+        self.assertTrue(page.exists())
+        html = page.read_text(encoding="utf-8")
+        self.assertIn("Ransomware recovery checklist for small business", html)
+        self.assertIn("not incident-response advice", html)
+        self.assertIn("Get my stack recommendation", html)
+        self.assertIn("https://www.verizon.com/business/resources/reports/dbir/", html)
+        self.assertIn("https://www.cisa.gov/stopransomware/ransomware-guide", html)
+
     def test_robots_and_legal_pages_are_generated(self):
         from src.generate_site import build_site
 

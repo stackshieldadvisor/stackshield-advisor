@@ -79,6 +79,9 @@ CORE_SLUGS = {
         "es": "metodologia",
         "de": "methodik",
     },
+    "ransomware_recovery": {
+        "en": "ransomware-recovery-checklist-small-business",
+    },
 }
 
 TRANSLATIONS = {
@@ -191,10 +194,13 @@ def canonical(base_url: str, page: Page) -> str:
 
 def alternate_links(base_url: str, pages_by_key: dict[str, dict[str, Page]], key: str) -> str:
     links = []
+    lang_pages = pages_by_key[key]
     for lang in LANGUAGES:
-        page = pages_by_key[key][lang]
+        page = lang_pages.get(lang)
+        if page is None:
+            continue
         links.append(f'<link rel="alternate" hreflang="{lang}" href="{canonical(base_url, page)}">')
-    default_page = pages_by_key[key]["en"]
+    default_page = lang_pages.get("en") or next(iter(lang_pages.values()))
     links.append(f'<link rel="alternate" hreflang="x-default" href="{canonical(base_url, default_page)}">')
     return "\n    ".join(links)
 
@@ -202,7 +208,9 @@ def alternate_links(base_url: str, pages_by_key: dict[str, dict[str, Page]], key
 def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_url: str, path_prefix: str = "") -> str:
     current_url = canonical(base_url, page)
     lang_nav = " · ".join(
-        f'<a href="{pages_by_key[key][lang].path}">{label}</a>' for lang, label in LANGUAGES.items()
+        f'<a href="{pages_by_key[key][lang].path}">{label}</a>'
+        for lang, label in LANGUAGES.items()
+        if lang in pages_by_key[key]
     )
     disclosure = ""
     if page.commercial:
@@ -363,6 +371,102 @@ def recommender_body(lang: str) -> str:
     """
 
 
+def ransomware_recovery_body() -> str:
+    return """
+    <article class="article">
+      <p class="eyebrow">Ransomware recovery · backup readiness · small business</p>
+      <h1>Ransomware recovery checklist for small business</h1>
+      <p class="lede">A practical, source-backed checklist for choosing and operating backups before a ransomware incident turns into prolonged downtime.</p>
+
+      <section class="decision-box">
+        <h2>Cold recommendation</h2>
+        <p>If your business is currently under attack, do not use this page as a response runbook. Isolate affected systems, preserve evidence where possible, contact qualified incident-response support, notify your insurer or legal counsel if relevant, and report cyber-enabled crime through the appropriate official channels. This page is planning guidance, not incident-response advice.</p>
+      </section>
+
+      <section>
+        <h2>What “ransomware recovery” means</h2>
+        <p>For a small business, ransomware recovery is the ability to restore critical operations, files, identities and cloud data after systems are encrypted, deleted, locked or exfiltrated. CISA defines ransomware as malware designed to encrypt files and make systems unusable until a ransom is demanded; it also notes that modern cases may include data theft and extortion.</p>
+        <p>The practical objective is not “perfect security”. It is to keep one clean recovery path available when laptops, servers, cloud accounts or backup consoles are compromised.</p>
+      </section>
+
+      <section>
+        <h2>Decision matrix before buying backup software</h2>
+        <table>
+          <thead><tr><th>Criterion</th><th>Why it matters</th><th>Minimum small-business signal</th><th>Red flag</th></tr></thead>
+          <tbody>
+            <tr><td>Offline or immutable backup copy</td><td>CISA recommends maintaining offline, encrypted backups and regularly testing backup availability and integrity. Ransomware often attempts to delete or encrypt reachable backups.</td><td>At least one backup copy is offline, immutable, object-locked or otherwise tamper-resistant.</td><td>All backups are always mounted with normal admin credentials.</td></tr>
+            <tr><td>Restore testing</td><td>A backup is only useful if the business can restore from it under pressure.</td><td>A documented monthly or quarterly restore test for one real file, one SaaS account and one critical system.</td><td>The vendor shows backup status but no clear restore workflow.</td></tr>
+            <tr><td>RTO and RPO fit</td><td>RTO is the target recovery time. RPO is the maximum acceptable data loss window. They turn “we need backups” into a business decision.</td><td>Management has written the maximum tolerable downtime and data loss for each critical process.</td><td>Every system is treated as equally critical, so nothing is prioritized.</td></tr>
+            <tr><td>Administrator MFA</td><td>Backup consoles are high-value targets because an attacker who controls them may delete recovery points.</td><td>Multi-factor authentication is enforced for every administrator and recovery action is logged.</td><td>Shared admin account, no MFA, or no audit trail.</td></tr>
+            <tr><td>SaaS and identity coverage</td><td>Small firms often depend on Microsoft 365, Google Workspace, cloud drives and identity providers, not just laptops.</td><td>The backup scope explicitly includes the systems where contracts, invoices, client files and email live.</td><td>Endpoint backup is purchased while critical SaaS data is excluded.</td></tr>
+            <tr><td>Response handoff</td><td>CISA and the FBI emphasize coordinated response and reporting. Backup restore should not erase evidence or worsen compromise.</td><td>The business knows who can authorize shutdown, restoration, reporting and external support.</td><td>No written escalation owner outside the compromised IT account.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>One-page readiness checklist</h2>
+        <h3>Before an incident</h3>
+        <ul>
+          <li>List the five systems the business cannot operate without: email, accounting, client files, production system, website or booking system.</li>
+          <li>Write an RTO and RPO for each system. Example: “accounting restored within 24 hours; maximum one business day of data loss”.</li>
+          <li>Keep at least one backup path that ransomware cannot normally modify: offline, immutable or strongly access-controlled.</li>
+          <li>Enable MFA on backup, identity, email, finance and admin accounts.</li>
+          <li>Run a restore test and record date, owner, duration, failure points and next correction.</li>
+          <li>Store recovery instructions outside the normal network: printed, offline or in a separate protected vault.</li>
+        </ul>
+        <h3>If ransomware is suspected</h3>
+        <ul>
+          <li>Do not rush to restore over compromised systems without expert review.</li>
+          <li>Escalate to the named decision owner and qualified incident-response support if available.</li>
+          <li>Preserve logs and affected devices where possible; restoration can destroy useful evidence.</li>
+          <li>Use official reporting routes where applicable. The FBI asks victims of internet crime to submit complaints to IC3 and contact law enforcement.</li>
+        </ul>
+        <h3>After restoration</h3>
+        <ul>
+          <li>Reset credentials and review administrative access before reconnecting restored systems.</li>
+          <li>Patch the exploited entry point if known. Verizon’s 2026 DBIR highlights software vulnerabilities as a leading breach entry point.</li>
+          <li>Run a lessons-learned review: what failed, what restored, what must be changed before the next test.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Fast scoring rule</h2>
+        <p>Score each line from 0 to 2. A business below 7/12 should not spend time comparing vendor brands yet; it should fix requirements first.</p>
+        <table>
+          <thead><tr><th>Control</th><th>0</th><th>1</th><th>2</th></tr></thead>
+          <tbody>
+            <tr><td>Critical systems listed</td><td>No list</td><td>Partial list</td><td>Owner-approved list</td></tr>
+            <tr><td>RTO/RPO defined</td><td>No</td><td>Informal</td><td>Written by process</td></tr>
+            <tr><td>Tamper-resistant backup</td><td>No</td><td>Some coverage</td><td>Critical data covered</td></tr>
+            <tr><td>Restore test</td><td>Never tested</td><td>Test older than 90 days</td><td>Recent documented test</td></tr>
+            <tr><td>Admin MFA</td><td>No</td><td>Some admins</td><td>All admins enforced</td></tr>
+            <tr><td>Escalation owner</td><td>No owner</td><td>Informal owner</td><td>Named owner and backup owner</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="cta-panel">
+        <h2>Next step</h2>
+        <p>Use the StackShield recommender to identify the minimum security stack to evaluate before comparing backup vendors.</p>
+        <a class="button primary" href="/en/small-business-cyber-stack-recommender/">Get my stack recommendation</a>
+      </section>
+
+      <section>
+        <h2>Sources and limits</h2>
+        <ul>
+          <li>Verizon, 2026 Data Breach Investigations Report: ransomware is listed as involving 48% of breaches, and software vulnerabilities as 31% of breach entry points. <a href="https://www.verizon.com/business/resources/reports/dbir/">https://www.verizon.com/business/resources/reports/dbir/</a></li>
+          <li>ENISA, Threat Landscape 2025: analysis of 4,875 incidents from 1 July 2024 to 30 June 2025. <a href="https://www.enisa.europa.eu/publications/enisa-threat-landscape-2025">https://www.enisa.europa.eu/publications/enisa-threat-landscape-2025</a></li>
+          <li>FBI, 2024 Internet Crime Report press release: 859,532 complaints and reported losses exceeding $16 billion in 2024; phishing/spoofing, extortion and personal data breaches were the top three categories by complaint count. <a href="https://www.fbi.gov/news/press-releases/fbi-releases-annual-internet-crime-report">https://www.fbi.gov/news/press-releases/fbi-releases-annual-internet-crime-report</a></li>
+          <li>IBM, Cost of a Data Breach Report 2025: global average breach cost reported at USD 4.4 million. This is not a small-business-specific estimate and should not be extrapolated directly to an individual SME. <a href="https://www.ibm.com/reports/data-breach">https://www.ibm.com/reports/data-breach</a></li>
+          <li>CISA, #StopRansomware Guide: recommends offline encrypted backups, restore testing, incident-response planning and coordinated response. <a href="https://www.cisa.gov/stopransomware/ransomware-guide">https://www.cisa.gov/stopransomware/ransomware-guide</a></li>
+        </ul>
+        <p><strong>Disclaimer:</strong> this is educational planning material for small-business resilience. It is not legal advice, insurance advice, forensic advice or ransomware incident-response advice.</p>
+      </section>
+    </article>
+    """
+
+
 def legal_body(kind: str, lang: str) -> tuple[str, str, str]:
     titles = {
         "disclosure": "Affiliate disclosure",
@@ -411,6 +515,16 @@ def build_pages() -> tuple[list[Page], dict[str, dict[str, Page]]]:
             page = Page(lang, CORE_SLUGS[kind][lang], title, desc, body)
             pages_by_key[kind][lang] = page
             pages.append(page)
+    ransomware_recovery = Page(
+        "en",
+        CORE_SLUGS["ransomware_recovery"]["en"],
+        "Ransomware recovery checklist for small business",
+        "A source-backed ransomware recovery and backup readiness checklist for small businesses, with RTO/RPO, restore testing, immutable backup and admin MFA criteria.",
+        ransomware_recovery_body(),
+        commercial=True,
+    )
+    pages_by_key["ransomware_recovery"]["en"] = ransomware_recovery
+    pages.append(ransomware_recovery)
     return pages, pages_by_key
 
 
