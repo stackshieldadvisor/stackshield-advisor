@@ -1,0 +1,60 @@
+name: Test and deploy StackShield Advisor
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: stackshield-pages-deploy
+  cancel-in-progress: true
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run tests
+        run: python3 -m unittest discover tests -v
+
+      - name: Build GitHub project Pages site
+        env:
+          SITE_BASE_URL: https://stackshieldadvisor.github.io/stackshield-advisor
+          SITE_PATH_PREFIX: /stackshield-advisor
+        run: python3 src/generate_site.py
+
+      - name: Verify generated deployment surface
+        run: |
+          test -f dist/en/ransomware-recovery-checklist-small-business/index.html
+          test -f dist/googled641817ccf2647bb.html
+          grep -q 'https://stackshieldadvisor.github.io/stackshield-advisor/en/ransomware-recovery-checklist-small-business/' dist/sitemap.xml
+          grep -q '/stackshield-advisor/assets/styles.css' dist/en/index.html
+
+      - name: Publish dist to gh-pages branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tmpdir="$(mktemp -d)"
+          cp -R dist/. "$tmpdir/"
+          touch "$tmpdir/.nojekyll"
+          cd "$tmpdir"
+          git init
+          git checkout -B gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Deploy static site from GitHub Actions"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin gh-pages

@@ -25,6 +25,22 @@ class DeploymentScriptTests(unittest.TestCase):
         self.assertNotIn(fake_classic, sanitized)
         self.assertEqual(sanitized.count("[REDACTED_GITHUB_TOKEN]"), 2)
 
+    def test_github_actions_workflow_deploys_project_pages(self):
+        from pathlib import Path
+
+        workflow = Path(".github/workflows/deploy.yml")
+        self.assertTrue(workflow.exists())
+        content = workflow.read_text(encoding="utf-8")
+
+        self.assertIn("python3 -m unittest discover tests -v", content)
+        self.assertIn("SITE_BASE_URL:", content)
+        self.assertIn("https://stackshieldadvisor.github.io/stackshield-advisor", content)
+        self.assertIn("SITE_PATH_PREFIX:", content)
+        self.assertIn("/stackshield-advisor", content)
+        self.assertIn("git push --force origin gh-pages", content)
+        self.assertIn("permissions:", content)
+        self.assertIn("contents: write", content)
+
 
 if __name__ == "__main__":
     unittest.main()
