@@ -94,15 +94,53 @@ class StaticSiteGenerationTests(unittest.TestCase):
             path_prefix="/stackshield-advisor",
         )
 
-        homepage = (self.tmpdir / "en" / "index.html").read_text(encoding="utf-8")
+        home = (self.tmpdir / "en" / "index.html").read_text(encoding="utf-8")
+        root = (self.tmpdir / "index.html").read_text(encoding="utf-8")
         sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
-        robots = (self.tmpdir / "robots.txt").read_text(encoding="utf-8")
 
-        self.assertIn('href="/stackshield-advisor/assets/styles.css"', homepage)
-        self.assertIn('href="/stackshield-advisor/en/best-backup-software-small-business/"', homepage)
-        self.assertIn('href="https://stackshieldadvisor.github.io/stackshield-advisor/en/"', homepage)
-        self.assertIn("https://stackshieldadvisor.github.io/stackshield-advisor/en/best-backup-software-small-business/", sitemap)
-        self.assertIn("Sitemap: https://stackshieldadvisor.github.io/stackshield-advisor/sitemap.xml", robots)
+        self.assertIn('href="/stackshield-advisor/assets/styles.css"', home)
+        self.assertIn('src="/stackshield-advisor/assets/recommender.js"', home)
+        self.assertIn('href="/stackshield-advisor/en/best-backup-software-small-business/"', home)
+        self.assertIn("url=/stackshield-advisor/en/", root)
+        self.assertIn("https://stackshieldadvisor.github.io/stackshield-advisor/en/", sitemap)
+
+    def test_ransomware_recovery_checklist_page_is_generated_and_sourced(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        page_path = self.tmpdir / "en" / "ransomware-recovery-checklist-small-business" / "index.html"
+        self.assertTrue(page_path.exists())
+        content = page_path.read_text(encoding="utf-8")
+
+        self.assertIn("Ransomware Recovery Checklist for Small Business", content)
+        self.assertIn("not incident-response advice", content)
+        self.assertIn("CISA", content)
+        self.assertIn("NCSC", content)
+        self.assertIn("Verizon DBIR", content)
+        self.assertIn("https://www.cisa.gov/stopransomware/ransomware-guide", content)
+        self.assertIn("https://www.ncsc.gov.uk/guidance/mitigating-malware-and-ransomware-attacks", content)
+        self.assertIn("/en/small-business-cyber-stack-recommender/", content)
+
+    def test_ransomware_recovery_checklist_is_in_sitemap(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertIn("/en/ransomware-recovery-checklist-small-business/", sitemap)
+
+    def test_static_google_verification_file_is_copied_to_site_root(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        verification = self.tmpdir / "googled641817ccf2647bb.html"
+        self.assertTrue(verification.exists())
+        self.assertEqual(
+            verification.read_text(encoding="utf-8").strip(),
+            "google-site-verification: googled641817ccf2647bb.html",
+        )
 
 
 if __name__ == "__main__":
