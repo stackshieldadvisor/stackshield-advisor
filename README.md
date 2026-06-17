@@ -7,6 +7,9 @@ Anonymous static lead-generation prototype for small-business cybersecurity and 
 - Static generator: `src/generate_site.py`
 - Tests: `tests/test_site_generator.py`
 - Built site: `dist/`
+- Public site: https://stackshieldadvisor.github.io/stackshield-advisor/
+- Source repository: https://github.com/stackshieldadvisor/stackshield-advisor
+- Deployment script: `scripts/deploy_github_pages.py`
 - Market research: `docs/market-research-2026-06-17.md`
 - Yoann action checklist: `docs/yoann-action-checklist-2026-06-17.md`
 - Languages: English, French, Spanish, German
@@ -17,11 +20,19 @@ Anonymous static lead-generation prototype for small-business cybersecurity and 
 ## Build
 
 ```bash
-python3 -m unittest tests/test_site_generator.py -v
-python3 src/generate_site.py
+python3 -m unittest discover tests -v
+SITE_BASE_URL="https://stackshieldadvisor.github.io/stackshield-advisor" SITE_PATH_PREFIX="/stackshield-advisor" python3 src/generate_site.py
 ```
 
 The site builds into `dist/`.
+
+## Deploy
+
+```bash
+python3 scripts/deploy_github_pages.py
+```
+
+This command runs tests, builds the site for GitHub project Pages, commits source changes if needed, pushes `main`, and publishes `dist/` to the `gh-pages` branch.
 
 ## Free deployment options
 
