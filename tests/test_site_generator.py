@@ -130,6 +130,34 @@ class StaticSiteGenerationTests(unittest.TestCase):
         sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
         self.assertIn("/en/ransomware-recovery-checklist-small-business/", sitemap)
 
+    def test_nis2_supplier_readiness_page_is_generated_with_sources_and_disclaimer(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        page_path = self.tmpdir / "en" / "nis2-supplier-cybersecurity-readiness-checklist" / "index.html"
+        self.assertTrue(page_path.exists())
+        content = page_path.read_text(encoding="utf-8")
+
+        self.assertIn("NIS2 Supplier Cybersecurity Readiness Checklist for SMEs", content)
+        self.assertIn("not legal advice", content)
+        self.assertIn("not a NIS2 applicability assessment", content)
+        self.assertIn("European Commission", content)
+        self.assertIn("ENISA", content)
+        self.assertIn("European DIGITAL SME Alliance", content)
+        self.assertIn("https://digital-strategy.ec.europa.eu/en/policies/nis2-directive", content)
+        self.assertIn("https://www.enisa.europa.eu/publications/nis2-technical-implementation-guidance", content)
+        self.assertIn("https://www.digitalsme.eu/digital-sme-launches-guide-to-position-smes-as-trusted-nis2-suppliers/", content)
+        self.assertIn("/en/ransomware-recovery-checklist-small-business/", content)
+
+    def test_nis2_supplier_readiness_page_is_in_sitemap(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
+        self.assertIn("/en/nis2-supplier-cybersecurity-readiness-checklist/", sitemap)
+
     def test_static_google_verification_file_is_copied_to_site_root(self):
         from src.generate_site import build_site
 
