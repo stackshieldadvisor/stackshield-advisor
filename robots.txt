@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://stackshieldadvisor.github.io/stackshield-advisor/sitemap.xml
