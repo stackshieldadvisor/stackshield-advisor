@@ -82,6 +82,9 @@ CORE_SLUGS = {
     "ransomware_recovery": {
         "en": "ransomware-recovery-checklist-small-business",
     },
+    "rto_rpo_calculator": {
+        "en": "rto-rpo-calculator-small-business",
+    },
     "nis2_supplier_readiness": {
         "en": "nis2-supplier-cybersecurity-readiness-checklist",
     },
@@ -263,6 +266,17 @@ def layout(page: Page, key: str, pages_by_key: dict[str, dict[str, Page]], base_
 
 def home_body(lang: str) -> str:
     t = TRANSLATIONS[lang]
+    resource_links = [
+        f'        <li><a href="/{lang}/{CORE_SLUGS["backup"][lang]}/">Backup software decision framework</a></li>',
+        f'        <li><a href="/{lang}/{CORE_SLUGS["recommender"][lang]}/">Small-business cyber stack recommender</a></li>',
+    ]
+    if lang == "en":
+        resource_links.extend([
+            f'        <li><a href="/en/{CORE_SLUGS["ransomware_recovery"]["en"]}/">Ransomware recovery checklist</a></li>',
+            f'        <li><a href="/en/{CORE_SLUGS["rto_rpo_calculator"]["en"]}/">RTO/RPO calculator for small business</a></li>',
+            f'        <li><a href="/en/{CORE_SLUGS["nis2_supplier_readiness"]["en"]}/">NIS2 supplier readiness checklist</a></li>',
+        ])
+    resource_link_items = "\n".join(resource_links)
     return f"""
     <section class="hero">
       <p class="eyebrow">{escape(t['tagline'])}</p>
@@ -287,8 +301,7 @@ def home_body(lang: str) -> str:
     <section>
       <h2>Initial commercial pages</h2>
       <ul class="link-list">
-        <li><a href="/{lang}/{CORE_SLUGS['backup'][lang]}/">Backup software decision framework</a></li>
-        <li><a href="/{lang}/{CORE_SLUGS['recommender'][lang]}/">Small-business cyber stack recommender</a></li>
+{resource_link_items}
       </ul>
     </section>
     """
@@ -451,8 +464,11 @@ def ransomware_recovery_body() -> str:
 
       <section class="cta-panel">
         <h2>Next step</h2>
-        <p>Use the StackShield recommender to identify the minimum security stack to evaluate before comparing backup vendors.</p>
-        <a class="button primary" href="/en/small-business-cyber-stack-recommender/">Get my stack recommendation</a>
+        <p>Define RTO/RPO targets first, then use the StackShield recommender to identify the minimum security stack to evaluate before comparing backup vendors.</p>
+        <div class="cta-row">
+          <a class="button primary" href="/en/rto-rpo-calculator-small-business/">Calculate RTO/RPO targets</a>
+          <a class="button secondary" href="/en/small-business-cyber-stack-recommender/">Get my stack recommendation</a>
+        </div>
       </section>
 
       <section>
@@ -465,6 +481,90 @@ def ransomware_recovery_body() -> str:
           <li>FBI, 2024 Internet Crime Report press release: 859,532 complaints and reported losses exceeding $16 billion in 2024; phishing/spoofing, extortion and personal data breaches were the top three categories by complaint count. <a href="https://www.fbi.gov/news/press-releases/fbi-releases-annual-internet-crime-report">https://www.fbi.gov/news/press-releases/fbi-releases-annual-internet-crime-report</a></li>
         </ul>
         <p><strong>Disclaimer:</strong> this is educational planning material for small-business resilience. It is not legal advice, insurance advice, forensic advice or ransomware incident-response advice.</p>
+      </section>
+    </article>
+    """
+
+
+def rto_rpo_calculator_body() -> str:
+    return """
+    <article class="article">
+      <p class="eyebrow">RTO · RPO · backup planning · local tool</p>
+      <h1>RTO/RPO Calculator for Small Business</h1>
+      <p class="lede">A browser-only estimator that turns tolerated downtime and data-loss windows into practical backup and recovery requirements before vendor comparison.</p>
+
+      <section class="decision-box">
+        <h2>Cold recommendation</h2>
+        <p>Do not buy backup software until the business has written at least one recovery time objective and one recovery point objective for each critical process. This calculator is a planning aid, not a service-level agreement, legal opinion, insurance assessment or incident-response runbook.</p>
+      </section>
+
+      <section>
+        <h2>What the calculator estimates</h2>
+        <p>NIST defines recovery time objective (RTO) as the length of time an information system can be in recovery before it harms mission or business processes. NIST defines recovery point objective (RPO) as the point in time to which data must be recovered after an outage.</p>
+        <p>In plain terms: RTO asks “how long can this be down?” RPO asks “how much recent data can we afford to lose or recreate?” Ready.gov recommends setting IT recovery priorities and recovery time objectives during the business impact analysis, then matching IT recovery time to the business function that depends on it.</p>
+      </section>
+
+      <form id="rto-rpo-calculator" class="tool-card">
+        <label>Critical process
+          <select name="process">
+            <option value="email">Email and calendar</option>
+            <option value="finance">Accounting, billing or payroll</option>
+            <option value="client_files">Client files or project delivery</option>
+            <option value="production">Production, booking or revenue system</option>
+            <option value="identity">Identity, admin or password vault</option>
+          </select>
+        </label>
+        <label>Maximum tolerable downtime in hours (RTO target)
+          <input name="downtime" type="number" min="0.25" step="0.25" value="24" required>
+        </label>
+        <label>Maximum acceptable data loss in hours (RPO target)
+          <input name="data_loss" type="number" min="0" step="0.25" value="24" required>
+        </label>
+        <label>People unable to work if this process is unavailable
+          <input name="people" type="number" min="0" step="1" value="5">
+        </label>
+        <label>Estimated loaded cost per blocked person-hour, in your currency (optional)
+          <input name="hourly_cost" type="number" min="0" step="1" value="50">
+        </label>
+        <label>Manual workaround
+          <select name="workaround">
+            <option value="none">No reliable workaround</option>
+            <option value="partial">Partial workaround exists</option>
+            <option value="strong">Tested workaround exists</option>
+          </select>
+        </label>
+        <button class="button primary" type="submit">Estimate recovery tier</button>
+        <p class="microcopy">No email required. The calculation runs locally in your browser and does not submit business data.</p>
+      </form>
+      <section id="rto-rpo-output" class="result-box" hidden></section>
+
+      <section>
+        <h2>How to interpret the result</h2>
+        <table>
+          <thead><tr><th>Result pattern</th><th>Practical implication before buying</th><th>Vendor evidence to request</th></tr></thead>
+          <tbody>
+            <tr><td>RTO under 4 hours or RPO under 1 hour</td><td>This is a critical recovery tier. Manual restore and ad hoc local backup are unlikely to be enough.</td><td>Documented restore workflow, frequent recovery points, admin MFA, immutable or strongly protected retention, and support model.</td></tr>
+            <tr><td>RTO within 24 hours and RPO within 24 hours</td><td>This is a standard business-critical tier for many small firms, but it still requires automation and restore testing.</td><td>Daily or more frequent backup, restore-test procedure, SaaS coverage, retention policy and audit trail.</td></tr>
+            <tr><td>RTO above 72 hours and RPO above 48 hours</td><td>This may be acceptable only for non-critical processes with a tested workaround.</td><td>Clear scope boundaries, low-cost retention, documented exclusions and a reason why slower restore is acceptable.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="cta-panel">
+        <h2>Next step</h2>
+        <p>Use the ransomware recovery checklist to turn the RTO/RPO targets into backup, restore-test, MFA and escalation requirements.</p>
+        <a class="button primary" href="/en/ransomware-recovery-checklist-small-business/">Use the ransomware recovery checklist</a>
+      </section>
+
+      <section>
+        <h2>Sources and limits</h2>
+        <ul>
+          <li>NIST CSRC Glossary, Recovery Time Objective: definition sourced from NIST SP 800-34 Rev. 1. <a href="https://csrc.nist.gov/glossary/term/recovery_time_objective">https://csrc.nist.gov/glossary/term/recovery_time_objective</a></li>
+          <li>NIST CSRC Glossary, RPO: “the point in time to which data must be recovered after an outage.” <a href="https://csrc.nist.gov/glossary/term/rpo">https://csrc.nist.gov/glossary/term/rpo</a></li>
+          <li>Ready.gov, IT Disaster Recovery Plan: states that IT recovery priorities and recovery time objectives should be developed during business impact analysis and that plans should be periodically tested. <a href="https://www.ready.gov/business/emergency-plans/recovery-plan">https://www.ready.gov/business/emergency-plans/recovery-plan</a></li>
+          <li>CISA, #StopRansomware Guide: recommends offline, encrypted backups of critical data and regular testing of backup availability and integrity. <a href="https://www.cisa.gov/stopransomware/ransomware-guide">https://www.cisa.gov/stopransomware/ransomware-guide</a></li>
+        </ul>
+        <p><strong>Disclaimer:</strong> this tool gives a rough planning estimate. Actual recovery capability depends on architecture, contracts, restore tests, identity security, data scope, incident conditions and supplier performance.</p>
       </section>
     </article>
     """
@@ -677,6 +777,16 @@ def build_pages() -> tuple[list[Page], dict[str, dict[str, Page]]]:
     )
     pages_by_key["ransomware_recovery"]["en"] = ransomware_recovery
     pages.append(ransomware_recovery)
+    rto_rpo_calculator = Page(
+        "en",
+        CORE_SLUGS["rto_rpo_calculator"]["en"],
+        "RTO/RPO calculator for small business",
+        "A browser-only RTO/RPO calculator for small businesses defining backup, restore and ransomware recovery requirements before vendor comparison.",
+        rto_rpo_calculator_body(),
+        commercial=True,
+    )
+    pages_by_key["rto_rpo_calculator"]["en"] = rto_rpo_calculator
+    pages.append(rto_rpo_calculator)
     nis2_supplier_readiness = Page(
         "en",
         CORE_SLUGS["nis2_supplier_readiness"]["en"],
@@ -792,7 +902,7 @@ th { background:#eef3ff; }
 .link-list li { margin:10px 0; }
 .tool-card { display:grid; gap:16px; max-width:720px; }
 label { display:grid; gap:7px; font-weight:800; }
-select { padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:white; font:inherit; }
+select, input { padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:white; font:inherit; }
 .microcopy { color:var(--muted); font-size:14px; }
 .result-box { margin-top:18px; border-color:#96d6c9; background:#effcf9; }
 .language-switcher { margin-top:28px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); }
@@ -839,6 +949,91 @@ RECOMMENDER_JS = """
 
     output.hidden = false;
     output.innerHTML = '<h2>Recommended first evaluation stack</h2><ol>' + recommendations.map(item => '<li>' + item + '</li>').join('') + '</ol><p><strong>Next:</strong> compare vendors only after these requirements are clear. This is informational guidance, not incident-response or legal advice.</p>';
+  });
+})();
+
+(function () {
+  const form = document.getElementById('rto-rpo-calculator');
+  const output = document.getElementById('rto-rpo-output');
+  if (!form || !output) return;
+
+  const processLabels = {
+    email: 'Email and calendar',
+    finance: 'Accounting, billing or payroll',
+    client_files: 'Client files or project delivery',
+    production: 'Production, booking or revenue system',
+    identity: 'Identity, admin or password vault'
+  };
+
+  const formatHours = function (hours) {
+    if (hours === 0) return 'near-zero data loss';
+    if (hours < 1) return Math.round(hours * 60) + ' minutes';
+    if (hours === 1) return '1 hour';
+    if (hours % 24 === 0) {
+      const days = hours / 24;
+      return days === 1 ? '1 day' : days + ' days';
+    }
+    return hours + ' hours';
+  };
+
+  const safeNumber = function (formData, key) {
+    const value = Number.parseFloat(formData.get(key));
+    return Number.isFinite(value) && value >= 0 ? value : 0;
+  };
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const data = new FormData(form);
+    const process = processLabels[data.get('process')] || 'Selected process';
+    const downtime = Math.max(0.25, safeNumber(data, 'downtime'));
+    const dataLoss = safeNumber(data, 'data_loss');
+    const people = safeNumber(data, 'people');
+    const hourlyCost = safeNumber(data, 'hourly_cost');
+    const workaround = data.get('workaround');
+    const exposure = downtime * people * hourlyCost;
+
+    let tier = 'Flexible recovery tier';
+    let implication = 'A slower, lower-cost backup pattern may be acceptable only if this process is genuinely non-critical and the workaround has been tested.';
+    const requirements = [
+      'Document the system owner, restore owner and escalation owner.',
+      'Run a restore test and keep the date, duration, result and next fix.',
+      'Protect backup and administrator accounts with MFA.'
+    ];
+
+    if (downtime <= 4 || dataLoss <= 1) {
+      tier = 'Critical recovery tier';
+      implication = 'The target is tight. Treat this as a managed recovery requirement, not a casual file-backup requirement.';
+      requirements.push('Ask vendors for frequent recovery points, immutable or strongly protected retention, tested restore workflows and support response terms.');
+    } else if (downtime <= 24 || dataLoss <= 24) {
+      tier = 'Standard business-critical tier';
+      implication = 'Daily or more frequent automated backup may fit, but only if restore testing proves the target is realistic.';
+      requirements.push('Ask vendors for SaaS coverage, clear restore steps, retention policy, admin audit logs and documented recovery testing.');
+    } else {
+      requirements.push('Write down why slower recovery is acceptable and which workarounds keep the business operating.');
+    }
+
+    if (workaround === 'none' && downtime > 24) {
+      requirements.push('Because no reliable workaround exists, reconsider whether the RTO can safely exceed 24 hours.');
+    }
+    if (dataLoss === 0) {
+      requirements.push('Near-zero data loss usually requires specialised architecture. Validate feasibility before promising it to clients.');
+    }
+
+    const exposureText = exposure > 0
+      ? exposure.toLocaleString(undefined, { maximumFractionDigits: 0 }) + ' currency units at the selected RTO'
+      : 'not estimated because people or hourly cost is zero';
+
+    output.hidden = false;
+    output.innerHTML = '<h2>' + tier + '</h2>' +
+      '<p><strong>Process:</strong> ' + process + '</p>' +
+      '<ul>' +
+      '<li><strong>Suggested RTO:</strong> restore within ' + formatHours(downtime) + ' or faster.</li>' +
+      '<li><strong>Suggested RPO:</strong> recover to a point no older than ' + formatHours(dataLoss) + '.</li>' +
+      '<li><strong>Approximate staff downtime exposure:</strong> ' + exposureText + '.</li>' +
+      '</ul>' +
+      '<p><strong>Interpretation:</strong> ' + implication + '</p>' +
+      '<h3>Minimum requirements to document</h3><ol>' + requirements.map(item => '<li>' + item + '</li>').join('') + '</ol>' +
+      '<p class="microcopy">This is a rough planning estimate. It does not prove that any vendor or internal process can meet the target until a restore test has been completed.</p>';
   });
 })();
 """

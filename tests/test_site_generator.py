@@ -158,6 +158,40 @@ class StaticSiteGenerationTests(unittest.TestCase):
         sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
         self.assertIn("/en/nis2-supplier-cybersecurity-readiness-checklist/", sitemap)
 
+    def test_rto_rpo_calculator_page_is_generated_with_sources_and_local_tool(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        page_path = self.tmpdir / "en" / "rto-rpo-calculator-small-business" / "index.html"
+        self.assertTrue(page_path.exists())
+        content = page_path.read_text(encoding="utf-8")
+        recommender_js = (self.tmpdir / "assets" / "recommender.js").read_text(encoding="utf-8")
+
+        self.assertIn("RTO/RPO Calculator for Small Business", content)
+        self.assertIn('id="rto-rpo-calculator"', content)
+        self.assertIn("No email required", content)
+        self.assertIn("not a service-level agreement", content)
+        self.assertIn("https://csrc.nist.gov/glossary/term/recovery_time_objective", content)
+        self.assertIn("https://csrc.nist.gov/glossary/term/rpo", content)
+        self.assertIn("https://www.ready.gov/business/emergency-plans/recovery-plan", content)
+        self.assertIn("https://www.cisa.gov/stopransomware/ransomware-guide", content)
+        self.assertIn("/en/ransomware-recovery-checklist-small-business/", content)
+        self.assertIn("rto-rpo-output", recommender_js)
+        self.assertNotRegex(content, re.compile(r'<input[^>]+type=["\']email["\']', re.I))
+
+    def test_rto_rpo_calculator_page_is_in_sitemap_and_linked_from_ransomware_page(self):
+        from src.generate_site import build_site
+
+        build_site(self.tmpdir)
+
+        sitemap = (self.tmpdir / "sitemap.xml").read_text(encoding="utf-8")
+        ransomware = (self.tmpdir / "en" / "ransomware-recovery-checklist-small-business" / "index.html").read_text(encoding="utf-8")
+        homepage = (self.tmpdir / "en" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("/en/rto-rpo-calculator-small-business/", sitemap)
+        self.assertIn("/en/rto-rpo-calculator-small-business/", ransomware)
+        self.assertIn("/en/rto-rpo-calculator-small-business/", homepage)
+
     def test_static_google_verification_file_is_copied_to_site_root(self):
         from src.generate_site import build_site
 

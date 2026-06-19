@@ -30,7 +30,7 @@ th { background:#eef3ff; }
 .link-list li { margin:10px 0; }
 .tool-card { display:grid; gap:16px; max-width:720px; }
 label { display:grid; gap:7px; font-weight:800; }
-select { padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:white; font:inherit; }
+select, input { padding:11px 12px; border:1px solid var(--line); border-radius:12px; background:white; font:inherit; }
 .microcopy { color:var(--muted); font-size:14px; }
 .result-box { margin-top:18px; border-color:#96d6c9; background:#effcf9; }
 .language-switcher { margin-top:28px; padding-top:18px; border-top:1px solid var(--line); color:var(--muted); }
